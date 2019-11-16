@@ -1,0 +1,14 @@
+# Blender MTL File: 'Drachen_1.0_BI_Animation_Baked.blend'
+# Material Count: 1
+
+newmtl Game_dragon.004
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Bump textures\\dragon_ N.jpg
+map_Kd textures\\dragon_C.jpg
+map_Ks textures\\dragon_C.jpg

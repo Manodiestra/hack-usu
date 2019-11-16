@@ -2,6 +2,7 @@ import cv2
 import time
 import numpy as np
 import pandas
+import imutils
 
 
 protoFile = "./_data/pose_deploy.prototxt"
@@ -15,6 +16,11 @@ threshold = 0.2
 # input_source = "asl.mp4"
 cap = cv2.VideoCapture(0)
 hasFrame, frame = cap.read()
+
+if not hasFrame:
+    exit()
+
+frame = imutils.resize(frame, 1500)
 
 frameWidth = frame.shape[1]
 frameHeight = frame.shape[0]
@@ -30,8 +36,8 @@ net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
 k = 0
 while 1:
     k+=1
-    t = time.time()
     hasFrame, frame = cap.read()
+    frame = imutils.resize(frame, 1500)
     frameCopy = np.copy(frame)
     if not hasFrame:
         cv2.waitKey()
@@ -43,8 +49,6 @@ while 1:
     net.setInput(inpBlob)
 
     output = net.forward()
-
-    print("forward = {}".format(time.time() - t))
 
     # Empty list to store the detected keypoints
     points = []
@@ -81,8 +85,6 @@ while 1:
             cv2.circle(frame, points[partA], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
             cv2.circle(frame, points[partB], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
 
-    print("Time Taken for frame = {}".format(time.time() - t))
-
     # cv2.putText(frame, "time taken = {:.2f} sec".format(time.time() - t), (50, 50), cv2.FONT_HERSHEY_COMPLEX, .8, (255, 50, 0), 2, lineType=cv2.LINE_AA)
     # cv2.putText(frame, "Hand Pose using OpenCV", (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 50, 0), 2, lineType=cv2.LINE_AA)
     cv2.imshow('Output-Skeleton', frame)
@@ -90,8 +92,6 @@ while 1:
     key = cv2.waitKey(1)
     if key == 27:
         break
-
-    print("total = {}".format(time.time() - t))
 
     # vid_writer.write(frame)
 

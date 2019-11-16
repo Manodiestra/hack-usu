@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import caffe
+import cv2
 
 # Set the right path to your model definition file, pretrained model weights,
 # and the image you would like to classify.
@@ -36,13 +37,12 @@ while True:
     if not hasFrame:
         cv2.waitKey()
         break
-
-    net.blobs['data'].data[0,...] = frame
+    
+    image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB).aastype(np.float32) / 255.0
+    net.blobs['data'].data[...] = image
     net.forward()
 
     output = net.blobs['prob'].data
-
-    print("forward = {}".format(time.time() - t))
 
     # Empty list to store the detected keypoints
     points = []

@@ -8,7 +8,7 @@ import imutils
 protoFile = "./_data/pose_deploy.prototxt"
 weightsFile = "./_data/pose_iter_102000.caffemodel"
 nPoints = 22
-POSE_PAIRS = [ [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20] ]
+POSE_PAIRS = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20] ]
 
 threshold = 0.2
 
@@ -20,7 +20,7 @@ hasFrame, frame = cap.read()
 if not hasFrame:
     exit()
 
-frame = imutils.resize(frame, 1500)
+# frame = imutils.resize(frame, 1500)
 
 frameWidth = frame.shape[1]
 frameHeight = frame.shape[0]
@@ -37,7 +37,7 @@ k = 0
 while 1:
     k+=1
     hasFrame, frame = cap.read()
-    frame = imutils.resize(frame, 1500)
+    # frame = imutils.resize(frame, 1500)
     frameCopy = np.copy(frame)
     if not hasFrame:
         cv2.waitKey()

@@ -193,7 +193,7 @@ def render(img, obj, projection, model, color=False):
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
         if color is False:
-            cv2.fillConvexPoly(img, imgpts, (255,int(numofColors / (i+1) * 254),0))
+            cv2.fillConvexPoly(img, imgpts, (255,int(i / numofColors * 254),0))
         else:
             color = hex_to_rgb(face[-1])
             color = color[::-1]  # reverse

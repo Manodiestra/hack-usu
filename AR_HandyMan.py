@@ -111,8 +111,8 @@ def main():
             minVal, prob, minLoc, point = cv2.minMaxLoc(probMap)
 
             if prob > threshold :
-                cv2.circle(frameCopy, (int(point[0]), int(point[1])), 6, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
-                cv2.putText(frameCopy, "{}".format(i), (int(point[0]), int(point[1])), cv2.FONT_HERSHEY_SIMPLEX, .8, (0, 0, 0), 2, lineType=cv2.LINE_AA)
+                # cv2.circle(frameCopy, (int(point[0]), int(point[1])), 6, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+                # cv2.putText(frameCopy, "{}".format(i), (int(point[0]), int(point[1])), cv2.FONT_HERSHEY_SIMPLEX, .8, (0, 0, 0), 2, lineType=cv2.LINE_AA)
 
                 # Add the point to the list if the probability is greater than the threshold
                 points.append((int(point[0]), int(point[1])))
@@ -134,9 +134,9 @@ def main():
         # print(dst_pts)
         # if dst_pts is not None:
         if dst_pts is not None:
-            for i in range(len(dst_pts)):
-                cv2.line(frameCopy,tuple(src_pts[i][0]),tuple(dst_pts[i][0]),(0,255,0),2)
-                cv2.drawMarker(frameCopy,tuple(dst_pts[i][0]),[0,255,255],cv2.MARKER_CROSS,30,2)
+            # for i in range(len(dst_pts)):
+            #     cv2.line(frameCopy,tuple(src_pts[i][0]),tuple(dst_pts[i][0]),(0,255,0),2)
+            #     cv2.drawMarker(frameCopy,tuple(dst_pts[i][0]),[0,255,255],cv2.MARKER_CROSS,30,2)
 
             homography = cv2.getPerspectiveTransform(src_pts, dst_pts)
         else:
@@ -156,10 +156,10 @@ def main():
             partA = pair[0]
             partB = pair[1]
 
-            if points[partA] and points[partB]:
-                cv2.line(frameCopy, points[partA], points[partB], (0, 255, 255), 2, lineType=cv2.LINE_AA)
-                cv2.circle(frameCopy, points[partA], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
-                cv2.circle(frameCopy, points[partB], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
+            # if points[partA] and points[partB]:
+            #     cv2.line(frameCopy, points[partA], points[partB], (0, 255, 255), 2, lineType=cv2.LINE_AA)
+            #     cv2.circle(frameCopy, points[partA], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
+            #     cv2.circle(frameCopy, points[partB], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
         # show result
         cv2.imshow('frame', frameCopy)
         key = cv2.waitKey(1)

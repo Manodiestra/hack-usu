@@ -33,9 +33,8 @@ inWidth = int(((aspect_ratio*inHeight)*8)//8)
 # vid_writer = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 15, (frame.shape[1],frame.shape[0]))
 
 net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
-k = 0
+
 while 1:
-    k+=1
     hasFrame, frame = cap.read()
     # frame = imutils.resize(frame, 1500)
     frameCopy = np.copy(frame)

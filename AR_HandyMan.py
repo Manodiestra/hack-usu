@@ -25,12 +25,14 @@ def main():
     """
     This functions loads the target surface image,
     """
-    # point_List = []
-    # clickPT = (0,0)
-    # def on_click(event, x, y, flags, param):
-    #     global point_List
-    #     if event == cv2.EVENT_LBUTTONUP:
-    #         clickPT = (x, y)
+    #1,2,17,19
+
+    protoFile = "./_data/pose_deploy.prototxt"
+    weightsFile = "./_data/pose_iter_102000.caffemodel"
+    nPoints = 22
+    POSE_PAIRS = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20] ]
+
+    threshold = 0.2
 
     homography = None 
     # matrix of camera parameters (made up but works quite well for me) 
@@ -43,73 +45,130 @@ def main():
     obj = OBJ(os.path.join(dir_name, 'obj_files/Drachen_1.0_obj.obj'), swapyz=True)  
     # init video capture
     cap = cv2.VideoCapture(0)
+    hasFrame, frame = cap.read()
+
+    if not hasFrame:
+        return
+
+    frameWidth = frame.shape[1]
+    frameHeight = frame.shape[0]
+
+    aspect_ratio = frameWidth/frameHeight
+
+    inHeight = 368
+    inWidth = int(((aspect_ratio*inHeight)*8)//8)
 
     cv2.namedWindow('frame')
     # cv2.setMouseCallback("frame",on_click)
+    boxSiz = 50
 
-    countY =0
+    net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
+
     while True:
-        if countY >100:
-            countY =0
-        countY +=1
         # read the current frame
-        ret, frame = cap.read()
+        hasFrame, frame = cap.read()
+        frameCopy = np.copy(frame)
+        if not hasFrame:
+            cv2.waitKey()
+            break
 
         frame.shape[0] #rows y 
-        boxSiz = 50
-        src_pts = np.float32([
+        src_pts = np.array([
             [[frame.shape[1]/2 -boxSiz, frame.shape[0]/2- boxSiz]],   # Top LEft point
             [[frame.shape[1]/2 +boxSiz, frame.shape[0]/2 -boxSiz]],  # Top right point
             [[frame.shape[1]/2- boxSiz, frame.shape[0]/2 + boxSiz]],  # BOttem left
             [[frame.shape[1]/2 +boxSiz, frame.shape[0]/2+ boxSiz]],  # BOttem Right
-            ])
+            ], dtype='float32')
 
         # print(src_pts)
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        parameters =  aruco.DetectorParameters_create()
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
-        # print(corners)
-        SPEED = 25
+        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
+        # parameters =  aruco.DetectorParameters_create()
+        # corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
+        # # print(corners)
+        inpBlob = cv2.dnn.blobFromImage(frame, 1.0 / 255, (inWidth, inHeight),
+                              (0, 0, 0), swapRB=False, crop=False)
+
+        net.setInput(inpBlob)
+
+        output = net.forward()
+
+        # Empty list to store the detected keypoints
+        points = []
+        corners = []
+
+        canvas = np.zeros((frameHeight, frameWidth), dtype=np.uint8)
+
+        for i in range(nPoints):
+            # confidence map of corresponding body's part.
+            probMap = output[0, i, :, :]
+            probMap = cv2.resize(probMap, (frameWidth, frameHeight))
+            grayProbMap = (np.interp(probMap, [0.0, 1.0], [0, 255])).astype(np.uint8)
+            canvas = cv2.bitwise_or(canvas, grayProbMap)
+
+            # Find global maxima of the probMap.
+            minVal, prob, minLoc, point = cv2.minMaxLoc(probMap)
+
+            if prob > threshold :
+                cv2.circle(frameCopy, (int(point[0]), int(point[1])), 6, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+                cv2.putText(frameCopy, "{}".format(i), (int(point[0]), int(point[1])), cv2.FONT_HERSHEY_SIMPLEX, .8, (0, 0, 0), 2, lineType=cv2.LINE_AA)
+
+                # Add the point to the list if the probability is greater than the threshold
+                points.append((int(point[0]), int(point[1])))
+                if i in (1,2,17,5):
+                    corners.append((int(point[0]), int(point[1])))
+            else :
+                points.append(None)
+        cv2.imshow("Probability Map", canvas)
+
         dst_pts = None
-        if len(corners) !=0:
+        if len(corners) == 4:
             dst_pts = np.float32([
-                [corners[0][0][0]],
-                [corners[0][0][1]],
-                [corners[0][0][3]],
-                [corners[0][0][2]],
+                [corners[0]],
+                [corners[1]],
+                [corners[3]],
+                [corners[2]],
                 ])
 
         # print(dst_pts)
+        # if dst_pts is not None:
         if dst_pts is not None:
             for i in range(len(dst_pts)):
-                cv2.line(frame,tuple(src_pts[i][0]),tuple(dst_pts[i][0]),(0,255,0),2)
+                cv2.line(frameCopy,tuple(src_pts[i][0]),tuple(dst_pts[i][0]),(0,255,0),2)
+                cv2.drawMarker(frameCopy,tuple(dst_pts[i][0]),[0,255,255],cv2.MARKER_CROSS,30,2)
 
-                cv2.drawMarker(frame,tuple(dst_pts[i][0]),[0,255,255],cv2.MARKER_CROSS,30,2)
-
-            homography = cv2.getPerspectiveTransform(
-                src_pts,
-                dst_pts,
-                 ) 
-            # if a valid homography matrix was found render cube on model plane
-            if homography is not None:
-                try:
-                    # obtain 3D projection matrix from homography matrix and camera parameters
-                    projection = projection_matrix(camera_parameters, homography)  
-                    # project cube or model
-                    frame = render(frame, obj, projection, frame, False)
-                    #frame = render(frame, model, projection)
-                except Exception as e:
-                    print("Error {}".format(e))
-        # show result
-        cv2.imshow('frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
+            homography = cv2.getPerspectiveTransform(src_pts, dst_pts)
         else:
-            pass
-            # print ()"Not enough matches found - %d/%d" % (len(matches), MIN_MATCHES)
+            homography = None
+        # if a valid homography matrix was found render cube on model plane
+        if homography is not None:
+            try:
+                # obtain 3D projection matrix from homography matrix and camera parameters
+                projection = projection_matrix(camera_parameters, homography)  
+                # project cube or model
+                render(frameCopy, obj, projection, frame, False)
+                #frame = render(frame, model, projection)
+            except Exception as e:
+                print("Error {}".format(e))
+        
+        for pair in POSE_PAIRS:
+            partA = pair[0]
+            partB = pair[1]
+
+            if points[partA] and points[partB]:
+                cv2.line(frameCopy, points[partA], points[partB], (0, 255, 255), 2, lineType=cv2.LINE_AA)
+                cv2.circle(frameCopy, points[partA], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
+                cv2.circle(frameCopy, points[partB], 5, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
+        # show result
+        cv2.imshow('frame', frameCopy)
+        key = cv2.waitKey(1)
+        if key == ord('q'):
+            break
+        elif key == ord('-'):
+            boxSiz += 20
+        elif key == ord("+"):
+            boxSiz -= 20
 
     cap.release()
     cv2.destroyAllWindows()

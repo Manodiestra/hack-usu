@@ -147,7 +147,7 @@ def main():
                 # obtain 3D projection matrix from homography matrix and camera parameters
                 projection = projection_matrix(camera_parameters, homography)  
                 # project cube or model
-                render(frameCopy, obj, projection, frame, False)
+                # render(frameCopy, obj, projection, frame, False)
                 #frame = render(frame, model, projection)
             except Exception as e:
                 print("Error {}".format(e))
@@ -192,7 +192,7 @@ def render(img, obj, projection, model, color=False):
         dst = cv2.perspectiveTransform(points.reshape(-1, 1, 3), projection)
         imgpts = np.int32(dst)
         if color is False:
-            cv2.fillConvexPoly(img, imgpts, (137, 27, 211))
+            cv2.fillConvexPoly(img, imgpts, (255,0,0))
         else:
             color = hex_to_rgb(face[-1])
             color = color[::-1]  # reverse
